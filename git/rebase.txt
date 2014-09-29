@@ -1,0 +1,71 @@
+-----------------------------
+-- 直前のcommitログの修正
+-----------------------------
+$ git commit --amend
+
+-----------------------------
+-- 操作ログ
+-----------------------------
+$ git reflog
+86eeef9 HEAD@{0}: commit: modify add1920
+4692bdc HEAD@{1}: commit (amend): Delete amend test
+41a1a00 HEAD@{2}: commit: amend test
+92f2a5c HEAD@{3}: checkout: moving from new-note to 92f2a5cdfddd345500dbdc056cfd210d63bdecdd
+
+-----------------------------
+-- 直前のコミット以外のコミットメッセージを修正する方法 
+-----------------------------
+$ git rebase -i HEAD~2
+pick 4692bdc Delete amend test      → reword 4692bdc Delete amend test
+pick 86eeef9 modify add1920         → reword 86eeef9 modify add1920
+                                    
+→pickは何もしない
+→rewordにすると一つずつコミットメッセージを書き換えれる
+　→変えたいものをrewordにすると、変えたいログのものを書き換えるエディタが立ち上がる
+→edit
+　→指定したコミットまでの情報まで遡る。
+　→これはコミットを分割したい時などに利用する
+　→要はそのコミット時点のファイルの編集ができる。
+　　→ただし、そのあとに変更したファイルなどを書き換えるとまずいかも。。。
+　　→修正したらcommitして、rebaseをcontinueする
+        git commit --amend
+        git rebase --continue
+　→rebaseを続行させてファイルの競合が起きてしまった時の対応
+　　※基本的にはCOMMITしているファイルは修正しない方がいい。競合してしまうので。abortするしかない。。
+　　When you have resolved this problem run "git rebase --continue".
+　　　　→競合したファイルを解決してcontinueを続ける
+　　　　→git statusでどういったことが起きているのかを確認できる
+　　　　→git diffで現時点と競合が起きてしまったファイルの差異を確認できる
+　　　　→修正したファイル（both)なら修正してaddすればcommitが続行できる
+　　　　→もしrebaseを誤ってrebasaとしてしまったときは、
+　　　　　/home/owner/git/hiroton9/note/.git/rebase-merge/git-rebase-todo
+　　　　　↑にファイルがあるのでそれを編集してcontinueすればよい
+　　If you would prefer to skip this patch, instead run "git rebase --skip".
+　　　　→競合が起きたcommitをskipして次のcommitのrebaseを続ける
+　　To check out the original branch and stop rebasing run "git rebase --abort".
+　　　　→新しいbranchを作成してこの時点でrebaseを止める
+　　　　→書き換えた後は(no branch)になるのでamendすると、元のbranchになる
+　　　　　git commit --amend
+
+→squash
+　→直前のコミットと指定したコミットを統合する。（ファイルの変更はない）
+　→これは複数のコミットを統合するときなどに利用する
+　→要はそのコミット事態の操作を一緒にする
+　-----------------------------------------------------
+　# The first commit's message is:
+　　commit 4 move move5->6
+　# This is the 2nd commit message:
+　　commit 6 move move6->7
+　# Changes to be committed:
+　#       renamed:    move5.txt -> move7.txt
+　-----------------------------------------------------
+　→→ move5.txtがmove7.txtになる。
+　→→ commit 4　の move5.txt が move6.txtになった時の修正が取り消される？もしくはそこもマージしてもらえる？
+
+-----------------------------
+-- コミット事態の修正
+-----------------------------
+「git reset --soft」 → ワークディレクトリの内容はそのままでコミットだけを取り消す。 
+「git reset --hard」 → コミット取り消した上でワークディレクトリの内容も書き換える。 
+「git reset --soft HEAD^」の「HEAD^」はひとつ前のコミットの意味
+
